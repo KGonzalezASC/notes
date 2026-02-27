@@ -1,0 +1,18 @@
+name: Revalidate Portfolio
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**/*.md"
+
+jobs:
+  revalidate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call revalidation webhook
+        run: |
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"secret": "${{ secrets.REVALIDATE_SECRET_TOKEN }}"}' \
+            ${{ secrets.PORTFOLIO_WEBHOOK_URL }}
