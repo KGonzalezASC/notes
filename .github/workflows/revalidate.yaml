@@ -13,16 +13,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Get changed files
         id: changed
         run: |
-          # Get added/modified files
-          ADDED_MODIFIED=$(git diff --name-only --diff-filter=AM HEAD~1 HEAD -- '*.md' | jq -R -s -c 'split("\n")[:-1]')
-          # Get deleted files
-          DELETED=$(git diff --name-only --diff-filter=D HEAD~1 HEAD -- '*.md' | jq -R -s -c 'split("\n")[:-1]')
-          
+          # Handle first push (no previous commit)
+          if [ "$(git rev-list --count HEAD)" -eq 1 ]; then
+            ADDED_MODIFIED=$(git ls-files '*.md' | jq -R -s -c 'split("\n")[:-1]')
+            DELETED="[]"
+          else
+            ADDED_MODIFIED=$(git diff --name-only --diff-filter=AM HEAD~1 HEAD -- '*.md' | jq -R -s -c 'split("\n")[:-1]')
+            DELETED=$(git diff --name-only --diff-filter=D HEAD~1 HEAD -- '*.md' | jq -R -s -c 'split("\n")[:-1]')
+          fi
           echo "added_modified=$ADDED_MODIFIED" >> $GITHUB_OUTPUT
           echo "deleted=$DELETED" >> $GITHUB_OUTPUT
 
