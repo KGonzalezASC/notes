@@ -17,4 +17,6 @@ If you see this page, it means:
 
 7. it works
 
-8. revalidateTag fix deployed
+8. just being sure
+
+
