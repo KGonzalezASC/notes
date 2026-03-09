@@ -15,6 +15,6 @@ If you see this page, it means:
 5. made change to trigger action
 6. trying again
 
-**Current Time:** 2026-03-09 14:35
-
 7. it works
+
+8. revalidateTag fix deployed
