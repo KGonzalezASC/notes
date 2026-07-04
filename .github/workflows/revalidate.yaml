@@ -16,6 +16,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Generate Notes Manifest
+        run: node scripts/generate-manifest.js
+
+      - name: Commit and Push Manifest
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add notes-manifest.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Auto-generate notes-manifest.json [skip ci]"
+            git push origin main
+          else
+            echo "No changes in notes-manifest.json"
+          fi
+
       - name: Get changed files
         id: changed
         run: |
