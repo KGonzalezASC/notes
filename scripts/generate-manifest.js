@@ -158,6 +158,21 @@ function extractTitleFromHeading(body, fallbackTitle) {
   return fallbackTitle;
 }
 
+/**
+ * Build reverse lookup: embed ref → note slugs that reference it.
+ * Computed at publish time so the portfolio webhook never scans all notes.
+ */
+function buildExcalidrawIndex(notes) {
+  const index = Object.create(null);
+  for (const entry of notes) {
+    for (const ref of entry.excalidrawRefs) {
+      if (!index[ref]) index[ref] = [];
+      index[ref].push(entry.slug);
+    }
+  }
+  return index;
+}
+
 function main() {
   console.log('Generating notes manifest...');
   if (!fs.existsSync(CARDS_DIR)) {
@@ -198,8 +213,18 @@ function main() {
   // Sort manifest by date descending (newest first)
   manifest.sort((a, b) => b.date.localeCompare(a.date));
 
-  fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2), 'utf8');
-  console.log(`Successfully generated manifest with ${manifest.length} notes at ${MANIFEST_PATH}`);
+  const bundle = {
+    version: 2,
+    notes: manifest,
+    excalidrawIndex: buildExcalidrawIndex(manifest),
+  };
+
+  fs.writeFileSync(MANIFEST_PATH, JSON.stringify(bundle, null, 2), 'utf8');
+  const indexSize = Object.keys(bundle.excalidrawIndex).length;
+  console.log(
+    `Successfully generated manifest v2 with ${manifest.length} notes ` +
+      `and ${indexSize} indexed diagram(s) at ${MANIFEST_PATH}`
+  );
 }
 
 main();

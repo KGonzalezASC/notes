@@ -1,52 +1,62 @@
-[
-  {
-    "slug": "cardsbanyanconfigeditorplaceholder",
-    "title": "editor_placeholder",
-    "date": "2026-07-04",
-    "tags": [],
-    "featured": false,
-    "excerpt": "Editor placeholder entry.",
-    "excalidrawRefs": [],
-    "filePath": "cards/banyan_config/editor_placeholder.md"
-  },
-  {
-    "slug": "test-document",
-    "title": "Test Document",
-    "date": "2026-07-04",
-    "tags": [],
-    "featured": false,
-    "excerpt": "This is for opencode so that we can test out our ISR feature",
-    "excalidrawRefs": [
-      "Drawing 2026-03-07 02.41.12.excalidraw"
-    ],
-    "filePath": "cards/Year2026/Quarter1/Month03/Day07/Test Document.md"
-  },
-  {
-    "slug": "more-complex-note",
-    "title": "FishNet Networking Concepts",
-    "date": "2026-07-04",
-    "tags": [
-      "networking",
-      "fishnet",
-      "csharp"
-    ],
-    "featured": false,
-    "excerpt": "Middleware provides hooks to insert custom logic between the raw transport layer and FishNet's serialization layer. This lets you intercept, modify...",
-    "excalidrawRefs": [],
-    "filePath": "cards/Year2026/Quarter1/Month03/Day09/More Complex note.md"
-  },
-  {
-    "slug": "webhook-test",
-    "title": "Webhook Test Note",
-    "date": "2026-03-09",
-    "tags": [
-      "test",
-      "webhook",
-      "isr"
-    ],
-    "featured": false,
-    "excerpt": "If you see this page, it means:",
-    "excalidrawRefs": [],
-    "filePath": "cards/Year2026/Quarter1/Month03/Day09/Webhook Test.md"
+{
+  "version": 2,
+  "notes": [
+    {
+      "slug": "cardsbanyanconfigeditorplaceholder",
+      "title": "editor_placeholder",
+      "date": "2026-07-07",
+      "tags": [],
+      "featured": false,
+      "excerpt": "",
+      "excalidrawRefs": [],
+      "filePath": "cards/banyan_config/editor_placeholder.md"
+    },
+    {
+      "slug": "test-document",
+      "title": "Test Document",
+      "date": "2026-07-07",
+      "tags": [
+        "\"test\""
+      ],
+      "featured": false,
+      "excerpt": "This is for opencode so that we can test out our ISR feature",
+      "excalidrawRefs": [
+        "Drawing 2026-03-07 02.41.12.excalidraw"
+      ],
+      "filePath": "cards/Year2026/Quarter1/Month03/Day07/Test Document.md"
+    },
+    {
+      "slug": "more-complex-note",
+      "title": "FishNet Networking Concepts",
+      "date": "2026-07-07",
+      "tags": [
+        "networking",
+        "fishnet",
+        "csharp"
+      ],
+      "featured": false,
+      "excerpt": "Middleware provides hooks to insert custom logic between the raw transport layer and FishNet's serialization layer. This lets you intercept, modify...",
+      "excalidrawRefs": [],
+      "filePath": "cards/Year2026/Quarter1/Month03/Day09/More Complex note.md"
+    },
+    {
+      "slug": "webhook-test",
+      "title": "Webhook Test Note",
+      "date": "2026-03-09",
+      "tags": [
+        "test",
+        "webhook",
+        "isr"
+      ],
+      "featured": false,
+      "excerpt": "If you see this page, it means:",
+      "excalidrawRefs": [],
+      "filePath": "cards/Year2026/Quarter1/Month03/Day09/Webhook Test.md"
+    }
+  ],
+  "excalidrawIndex": {
+    "Drawing 2026-03-07 02.41.12.excalidraw": [
+      "test-document"
+    ]
   }
-]
+}
