@@ -44,7 +44,7 @@ function getMarkdownFiles(dir, fileList = []) {
  */
 function extractExcalidrawRefs(content) {
   const references = [];
-  const regex = /!\[\[([\s\S]+?\.excalidraw)\]\]/g;
+  const regex = /!\[\[([^\]|]+\.excalidraw)(?:\|[^\]]*)?\]\]/g;
   let match;
   while ((match = regex.exec(content)) !== null) {
     references.push(match[1]);
