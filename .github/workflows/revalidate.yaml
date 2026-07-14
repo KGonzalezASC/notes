@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - "**/*.md"
+      - "scripts/generate-manifest.js"
+      - "notes-manifest.json"
+      - ".github/workflows/revalidate.yaml"
 
 jobs:
   revalidate:
@@ -15,6 +18,26 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # Diff the push that triggered this run — before any auto-commit of the
+      # manifest, which would otherwise make HEAD~1..HEAD look like a
+      # manifest-only change and leave addedModified empty.
+      - name: Get changed files
+        id: changed
+        run: |
+          BEFORE_SHA="${{ github.event.before }}"
+          AFTER_SHA="${{ github.sha }}"
+          if [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            ADDED_MODIFIED=$(git ls-files '*.md' | jq -R -s -c 'split("\n")[:-1]')
+            DELETED="[]"
+          else
+            ADDED_MODIFIED=$(git diff --name-only --diff-filter=AM "$BEFORE_SHA" "$AFTER_SHA" -- '*.md' | jq -R -s -c 'split("\n")[:-1]')
+            DELETED=$(git diff --name-only --diff-filter=D "$BEFORE_SHA" "$AFTER_SHA" -- '*.md' | jq -R -s -c 'split("\n")[:-1]')
+          fi
+          # Always include the manifest so /notes index revalidates
+          ADDED_MODIFIED=$(echo "$ADDED_MODIFIED" | jq -c '. + ["notes-manifest.json"] | unique')
+          echo "added_modified=$ADDED_MODIFIED" >> $GITHUB_OUTPUT
+          echo "deleted=$DELETED" >> $GITHUB_OUTPUT
 
       - name: Generate Notes Manifest
         run: node scripts/generate-manifest.js
@@ -30,20 +53,6 @@ jobs:
           else
             echo "No changes in notes-manifest.json"
           fi
-
-      - name: Get changed files
-        id: changed
-        run: |
-          # Handle first push (no previous commit)
-          if [ "$(git rev-list --count HEAD)" -eq 1 ]; then
-            ADDED_MODIFIED=$(git ls-files '*.md' | jq -R -s -c 'split("\n")[:-1]')
-            DELETED="[]"
-          else
-            ADDED_MODIFIED=$(git diff --name-only --diff-filter=AM HEAD~1 HEAD -- '*.md' | jq -R -s -c 'split("\n")[:-1]')
-            DELETED=$(git diff --name-only --diff-filter=D HEAD~1 HEAD -- '*.md' | jq -R -s -c 'split("\n")[:-1]')
-          fi
-          echo "added_modified=$ADDED_MODIFIED" >> $GITHUB_OUTPUT
-          echo "deleted=$DELETED" >> $GITHUB_OUTPUT
 
       - name: Call revalidation webhook
         run: |

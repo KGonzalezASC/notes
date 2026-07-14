@@ -13,7 +13,7 @@ function pathToSlug(filePath) {
   const normalized = filePath.replace(/\\/g, '/');
   // Strip cards/YearYYYY/QuarterQ/MonthMM/DayDD/
   const withoutHierarchy = normalized.replace(/^cards\/[^/]+\/[^/]+\/[^/]+\/[^/]+\//, '');
-  
+
   return withoutHierarchy
     .replace(/\.md$/, '')
     .replace(/\.excalidraw\.md$/, '')
@@ -53,7 +53,62 @@ function extractExcalidrawRefs(content) {
 }
 
 /**
- * Parse frontmatter yaml-like properties without external dependency
+ * Strip surrounding single/double quotes from a scalar.
+ */
+function stripQuotes(value) {
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    return value.slice(1, -1);
+  }
+  return value;
+}
+
+/**
+ * Parse a YAML inline array: [a, b, "c"]
+ */
+function parseInlineArray(value) {
+  return value
+    .slice(1, -1)
+    .split(',')
+    .map((t) => stripQuotes(t.trim()))
+    .filter(Boolean);
+}
+
+/**
+ * Derive YYYY-MM-DD from cards/YearYYYY/QuarterN/MonthMM/DayDD/...
+ */
+function dateFromHierarchyPath(relativePath) {
+  const normalized = relativePath.replace(/\\/g, '/');
+  const match = normalized.match(
+    /Year(\d{4})\/Quarter\d+\/Month(\d{1,2})\/Day(\d{1,2})\//
+  );
+  if (!match) return null;
+  const [, year, month, day] = match;
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+}
+
+/**
+ * Resolve note date: frontmatter date → updated → folder hierarchy → file mtime.
+ */
+function resolveNoteDate(metadata, relativePath, filePath) {
+  const fromMeta = metadata.date || metadata.updated;
+  if (typeof fromMeta === 'string' && /^\d{4}-\d{2}-\d{2}/.test(fromMeta)) {
+    return fromMeta.slice(0, 10);
+  }
+  const fromFolder = dateFromHierarchyPath(relativePath);
+  if (fromFolder) return fromFolder;
+  try {
+    return fs.statSync(filePath).mtime.toISOString().split('T')[0];
+  } catch {
+    return new Date().toISOString().split('T')[0];
+  }
+}
+
+/**
+ * Parse frontmatter yaml-like properties without external dependency.
+ * Supports inline arrays and Obsidian-style YAML lists.
  */
 function parseFrontmatter(content) {
   const frontmatterRegex = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/;
@@ -68,34 +123,50 @@ function parseFrontmatter(content) {
   const metadata = {};
 
   const lines = rawMetadata.split('\n');
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Skip indented list continuations; they are consumed with their key
+    if (/^\s+- /.test(line)) continue;
+
     const colonIndex = line.indexOf(':');
     if (colonIndex === -1) continue;
 
     const key = line.slice(0, colonIndex).trim();
+    if (!key) continue;
+
     let value = line.slice(colonIndex + 1).trim();
 
-    // Parse array format: [a, b, c]
+    // Inline array: [a, b, c]
     if (value.startsWith('[') && value.endsWith(']')) {
-      metadata[key] = value
-        .slice(1, -1)
-        .split(',')
-        .map(t => t.trim())
-        .filter(Boolean);
-    } else {
-      // Clean quotes if present
-      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-        value = value.slice(1, -1);
+      metadata[key] = parseInlineArray(value);
+      continue;
+    }
+
+    // Empty value: may be followed by a YAML list
+    if (value === '') {
+      const listItems = [];
+      while (i + 1 < lines.length && /^\s+- /.test(lines[i + 1])) {
+        i += 1;
+        const item = stripQuotes(lines[i].replace(/^\s+- /, '').trim());
+        if (item) listItems.push(item);
       }
-      
-      // Parse boolean or string
-      if (value === 'true') {
-        metadata[key] = true;
-      } else if (value === 'false') {
-        metadata[key] = false;
+      if (listItems.length > 0) {
+        metadata[key] = listItems;
       } else {
-        metadata[key] = value;
+        metadata[key] = '';
       }
+      continue;
+    }
+
+    value = stripQuotes(value);
+
+    if (value === 'true') {
+      metadata[key] = true;
+    } else if (value === 'false') {
+      metadata[key] = false;
+    } else {
+      metadata[key] = value;
     }
   }
 
@@ -192,7 +263,7 @@ function main() {
     // Standardize metadata keys
     const titleFallback = path.basename(file, '.md');
     const title = metadata.title || extractTitleFromHeading(body, titleFallback);
-    const date = metadata.date || new Date().toISOString().split('T')[0];
+    const date = resolveNoteDate(metadata, relativePath, file);
     const tags = Array.isArray(metadata.tags) ? metadata.tags : [];
     const featured = metadata.featured === true;
     const excerpt = metadata.excerpt || extractExcerpt(body);
@@ -210,8 +281,12 @@ function main() {
     });
   }
 
-  // Sort manifest by date descending (newest first)
-  manifest.sort((a, b) => b.date.localeCompare(a.date));
+  // Sort manifest by date descending (newest first), then title for stability
+  manifest.sort((a, b) => {
+    const byDate = b.date.localeCompare(a.date);
+    if (byDate !== 0) return byDate;
+    return a.title.localeCompare(b.title);
+  });
 
   const bundle = {
     version: 2,
