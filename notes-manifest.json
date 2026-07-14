@@ -4,7 +4,7 @@
     {
       "slug": "cardsbanyanconfigeditorplaceholder",
       "title": "editor_placeholder",
-      "date": "2026-07-07",
+      "date": "2026-07-08",
       "tags": [],
       "featured": false,
       "excerpt": "",
@@ -14,7 +14,7 @@
     {
       "slug": "test-document",
       "title": "Test Document",
-      "date": "2026-07-07",
+      "date": "2026-07-08",
       "tags": [
         "\"test\""
       ],
@@ -28,7 +28,7 @@
     {
       "slug": "more-complex-note",
       "title": "FishNet Networking Concepts",
-      "date": "2026-07-07",
+      "date": "2026-07-08",
       "tags": [
         "networking",
         "fishnet",
@@ -38,6 +38,16 @@
       "excerpt": "Middleware provides hooks to insert custom logic between the raw transport layer and FishNet's serialization layer. This lets you intercept, modify...",
       "excalidrawRefs": [],
       "filePath": "cards/Year2026/Quarter1/Month03/Day09/More Complex note.md"
+    },
+    {
+      "slug": "design-patterns---general-and-unity-examples",
+      "title": "Design Patterns - General and Unity Examples",
+      "date": "2026-07-08",
+      "tags": [],
+      "featured": false,
+      "excerpt": "A working glossary of the patterns I use to reason about architecture. Each entry has the same shape:",
+      "excalidrawRefs": [],
+      "filePath": "cards/Year2026/Quarter3/Month07/Day08/Design Patterns - General and Unity Examples.md"
     },
     {
       "slug": "webhook-test",
