@@ -90,20 +90,15 @@ function dateFromHierarchyPath(relativePath) {
 }
 
 /**
- * Resolve note date: frontmatter date → updated → folder hierarchy → file mtime.
+ * Resolve note date: frontmatter date → updated → folder hierarchy → epoch.
+ * Avoid file mtime so local and CI generate identical manifests.
  */
-function resolveNoteDate(metadata, relativePath, filePath) {
+function resolveNoteDate(metadata, relativePath) {
   const fromMeta = metadata.date || metadata.updated;
   if (typeof fromMeta === 'string' && /^\d{4}-\d{2}-\d{2}/.test(fromMeta)) {
     return fromMeta.slice(0, 10);
   }
-  const fromFolder = dateFromHierarchyPath(relativePath);
-  if (fromFolder) return fromFolder;
-  try {
-    return fs.statSync(filePath).mtime.toISOString().split('T')[0];
-  } catch {
-    return new Date().toISOString().split('T')[0];
-  }
+  return dateFromHierarchyPath(relativePath) || '1970-01-01';
 }
 
 /**
@@ -263,7 +258,7 @@ function main() {
     // Standardize metadata keys
     const titleFallback = path.basename(file, '.md');
     const title = metadata.title || extractTitleFromHeading(body, titleFallback);
-    const date = resolveNoteDate(metadata, relativePath, file);
+    const date = resolveNoteDate(metadata, relativePath);
     const tags = Array.isArray(metadata.tags) ? metadata.tags : [];
     const featured = metadata.featured === true;
     const excerpt = metadata.excerpt || extractExcerpt(body);
