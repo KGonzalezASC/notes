@@ -28,6 +28,156 @@ A working glossary of the patterns I use to reason about architecture. Each entr
 > [!note] Code-version target
 > Unity examples target **Unity 6.3 LTS (6000.3) / C# 9.0**. General examples may use later C# features where they read better; those are labeled.
 
+## Code card annotation modes
+
+Live verification suite for candidate-style code cards. Each fence below exercises one annotation mode on this site — if every card renders and interacts, the port is good.
+
+### Plain
+
+```csharp
+public interface IRepository<T> {
+    T Get(string id);
+}
+```
+
+### Walkthrough
+
+```csharp {walkthrough}
+// @step 1: Contract | Define the repository surface callers depend on.
+public interface IEnemyRepository {
+    Enemy Get(string id);
+}
+
+// @step 2: Concrete store | Scene-aware lookup behind the abstraction.
+public class SceneEnemyRepository : IEnemyRepository {
+    public Enemy Get(string id) => FindInScene(id);
+}
+
+// @step 3: Consumer | Gameplay code depends on the interface, not the scene.
+public class SpawnDirector {
+    readonly IEnemyRepository enemies;
+    public SpawnDirector(IEnemyRepository enemies) => this.enemies = enemies;
+}
+```
+
+### Density
+
+```csharp {density}
+// @zoom signature
+public class ObjectPool<T> where T : class, new() {
+
+// @zoom standard
+  readonly Stack<T> free = new();
+  public T Rent() => free.Count > 0 ? free.Pop() : new T();
+  public void Return(T item) => free.Push(item);
+
+// @zoom verbose
+  // Prefer Rent/Return over Instantiate/Destroy in hot loops.
+  // Keep pooled instances reset before re-issue.
+
+// @zoom signature
+}
+```
+
+### Scrubber
+
+```csharp {scrubber}
+// @v 1 (Direct lookup) | Naive singleton access from gameplay code.
+public class ScoreService {
+    public static ScoreService Instance { get; private set; }
+    public int Score { get; private set; }
+    public void Add(int delta) => Score += delta;
+}
+
+// @v 2 (Injected service) | Constructor injection replaces static Instance.
+public class ScoreService {
+    public int Score { get; private set; }
+    public void Add(int delta) => Score += delta;
+}
+public class HudPresenter {
+    readonly ScoreService scores;
+    public HudPresenter(ScoreService scores) => this.scores = scores;
+}
+
+// @v 3 (Event-driven) | Score changes publish; UI observes without holding the service.
+public class ScoreService {
+    public event Action<int> Changed;
+    int score;
+    public void Add(int delta) {
+        score += delta;
+        Changed?.Invoke(score);
+    }
+}
+```
+
+### Heatmap
+
+```csharp {heatmap}
+// @heat cold | UpdateProjectiles() | 0.01ms | 0 B | System Entry Point | Runs once per frame.
+void UpdateProjectiles() {
+// @heat cold | CheckBoundaryExits() | 0.04ms | 0 B | Bounds Filter | Checks viewport overflow exits.
+  CheckBoundaryExits();
+// @heat warm | for loop | 0.45ms | 0 B | Iteration Overhead | Scales linearly with projectile counts.
+  for (int i = 0; i < projectiles.Count; i++) {
+// @heat warm | indexed read | 0.12ms | 0 B | Indexed Memory Read | Retrieves item from list index.
+    var projectile = projectiles[i];
+// @heat hot | UpdateMovement | 1.22ms | 0 B | Floating Point Update | Updates physics transforms.
+    projectile.UpdateMovement(Time.deltaTime);
+// @heat hot | CheckCollisions | 3.42ms | 184 B | GC Hotspot | Triggers allocations per query.
+    projectile.CheckCollisions();
+  }
+}
+```
+
+### Branches
+
+```csharp {branches}
+// @path reject -> Order empty or unpaid — bail early.
+public string ProcessOrder(Order order) {
+  if (order.ItemCount == 0) return "reject";
+// @path approve -> Premium customer over threshold needs review.
+  if (order.Total > 1000 && !order.IsPremium) return "approve";
+// @path commit -> Happy path commits the unit of work.
+  unitOfWork.Commit(order);
+  return "commit";
+}
+```
+
+### Memory
+
+```plaintext {memory}
+// @byte 0..31 Transform | position, velocity, and facing
+// @byte 32..54 State | current mode and gameplay flags
+// @byte 55..248 Input | rollback command history
+// @byte 249..284 Tail | checksums and variable metadata
+```
+
+### Glossary
+
+```csharp {glossary}
+// @typedef ICommand - Encapsulates a request as an object.
+// @typedef CommandBus - Routes commands to handlers.
+public void Issue(ICommand command) {
+  commandBus.Dispatch(command);
+}
+```
+
+### Linked map
+
+```csharp {linked-map}
+// @context sdk | GameInstaller.cs
+// @register IEnemyRepository Singleton | Scene-backed enemy lookup
+// @register IEventBus Singleton | Cross-system pub/sub
+// @register CombatDirector Singleton | Composition root for combat flow
+// @resolve SpawnSystem -> CombatDirector
+// @resolve HudPresenter -> CombatDirector
+bind.Singleton<IEnemyRepository>();
+bind.Singleton<IEventBus>();
+bind.Singleton<CombatDirector>();
+```
+
+---
+
 ## Contents
 
 **Principles**

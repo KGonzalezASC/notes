@@ -50,6 +50,19 @@
       "filePath": "cards/Year2026/Quarter3/Month07/Day08/Design Patterns - General and Unity Examples.md"
     },
     {
+      "slug": "code-card-annotation-probe",
+      "title": "Code Card Annotation Probe",
+      "date": "2026-07-13",
+      "tags": [
+        "code-card",
+        "probe"
+      ],
+      "featured": false,
+      "excerpt": "Verification note for candidate-style code cards and annotation modes.",
+      "excalidrawRefs": [],
+      "filePath": "cards/Year2026/Quarter3/Month07/Day13/Code Card Annotation Probe.md"
+    },
+    {
       "slug": "webhook-test",
       "title": "Webhook Test Note",
       "date": "2026-03-09",
