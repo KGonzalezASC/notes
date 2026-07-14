@@ -165,15 +165,26 @@ public void Issue(ICommand command) {
 ### Linked map
 
 ```csharp {linked-map}
-// @context sdk | GameInstaller.cs
-// @register IEnemyRepository Singleton | Scene-backed enemy lookup
-// @register IEventBus Singleton | Cross-system pub/sub
-// @register CombatDirector Singleton | Composition root for combat flow
-// @resolve SpawnSystem -> CombatDirector
-// @resolve HudPresenter -> CombatDirector
-bind.Singleton<IEnemyRepository>();
-bind.Singleton<IEventBus>();
-bind.Singleton<CombatDirector>();
+// @context sdk | BitScaleInstaller.cs
+// @register IConfig Singleton | Shared app configuration. Registered early so every consumer resolves the same instance.
+// @register ILogger Singleton | Diagnostics sink for install and runtime.
+// @register BitScaleSDK Singleton | Composition root. Pulls Config and Logger.
+// @resolve SceneBootstrap -> BitScaleSDK
+// @resolve MatchFlowController -> BitScaleSDK
+bind.Singleton<IConfig>();
+bind.Singleton<ILogger>();
+bind.Singleton<BitScaleSDK>();
+
+// @context game | GameSceneInstaller.cs
+// @register GameSessionManager Scene component | Live MonoBehaviour already in Game.unity.
+// @register ProjectileManager Scene component | Hot-path simulation service bound from the scene.
+// @register CharacterDatabase Existing instance | Readonly roster data injected without construction.
+// @resolve ContentPreloadGate -> GameSessionManager
+// @resolve MatchStateChecksum -> ProjectileManager
+// @resolve SkillcadePlayerMgr -> CharacterDatabase
+builder.RegisterComponent(gameSessionManager);
+builder.RegisterComponent(projectileManager);
+builder.RegisterInstance(gameSessionManager.CharacterDatabase);
 ```
 
 ---
