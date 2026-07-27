@@ -2,12 +2,36 @@
   "version": 2,
   "notes": [
     {
+      "slug": "addressables-scriptableobjects-and-manifest-design",
+      "title": "Addressables, ScriptableObjects, and Manifest Design",
+      "date": "2026-07-27",
+      "tags": [
+        "unity",
+        "addressables",
+        "scriptable-objects",
+        "manifests",
+        "webgl",
+        "caching",
+        "aws"
+      ],
+      "featured": false,
+      "excerpt": "How character selection led me from Unity ScriptableObjects and Addressables to signed manifests and versioned WebGL caching.",
+      "excalidrawRefs": [],
+      "filePath": "cards/Year2026/Quarter3/Month07/Day27/Addressables, ScriptableObjects, and Manifest Design.md"
+    },
+    {
       "slug": "how-this-website-is-made",
       "title": "How this website is made",
       "date": "2026-07-27",
-      "tags": [],
+      "tags": [
+        "architecture",
+        "markdown",
+        "obsidian",
+        "nextjs",
+        "vercel"
+      ],
       "featured": false,
-      "excerpt": "The goal for this section of the site was to build a blog I could truly call my own. When working with teams or interviewing, I often find myself s...",
+      "excerpt": "How an Obsidian-to-Git publishing workflow became a server-rendered developer notebook.",
       "excalidrawRefs": [],
       "filePath": "cards/Year2026/Quarter3/Month07/Day27/How this website is made.md"
     }

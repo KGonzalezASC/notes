@@ -1,6 +1,7 @@
 ---
 title: How this website is made
-tags: []
+tags: [architecture, markdown, obsidian, nextjs, vercel]
+excerpt: How an Obsidian-to-Git publishing workflow became a server-rendered developer notebook.
 ---
 The goal for this section of the site was to build a blog I could truly call my own. When working with teams or interviewing, I often find myself spending a lot of time frontloading context about my projects and thought process. I realized I needed to package my work better, not only to showcase what I've built, but to make it easier for others to understand how I think and collaborate.
 
@@ -158,7 +159,7 @@ The result is my own living developer notebook that documents the architecture, 
 ---
 
 <!-- letter-outro -->
-There's more to build.
+
 
 _Ciao,_
 
