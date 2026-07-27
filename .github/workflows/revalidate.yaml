@@ -58,7 +58,7 @@ jobs:
 
       - name: Call revalidation webhook
         run: |
-          curl -X POST \
+          curl --fail-with-body --location --retry 2 -X POST \
             -H "Content-Type: application/json" \
             -d '{
               "secret": "${{ secrets.REVALIDATE_SECRET_TOKEN }}",
