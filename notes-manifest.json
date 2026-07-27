@@ -2,89 +2,15 @@
   "version": 2,
   "notes": [
     {
-      "slug": "code-card-annotation-probe",
-      "title": "Code Card Annotation Probe",
-      "date": "2026-07-13",
-      "tags": [
-        "code-card",
-        "probe"
-      ],
-      "featured": false,
-      "excerpt": "Verification note for candidate-style code cards and annotation modes.",
-      "excalidrawRefs": [],
-      "filePath": "cards/Year2026/Quarter3/Month07/Day13/Code Card Annotation Probe.md"
-    },
-    {
-      "slug": "design-patterns---general-and-unity-examples",
-      "title": "Design Patterns - General and Unity Examples",
-      "date": "2026-06-28",
-      "tags": [
-        "design-patterns",
-        "architecture",
-        "reference",
-        "unity"
-      ],
-      "featured": false,
-      "excerpt": "A working glossary of the patterns I use to reason about architecture. Each entry has the same shape:",
-      "excalidrawRefs": [],
-      "filePath": "cards/Year2026/Quarter3/Month07/Day08/Design Patterns - General and Unity Examples.md"
-    },
-    {
-      "slug": "more-complex-note",
-      "title": "FishNet Networking Concepts",
-      "date": "2026-03-09",
-      "tags": [
-        "networking",
-        "fishnet",
-        "csharp"
-      ],
-      "featured": false,
-      "excerpt": "Middleware provides hooks to insert custom logic between the raw transport layer and FishNet's serialization layer. This lets you intercept, modify...",
-      "excalidrawRefs": [],
-      "filePath": "cards/Year2026/Quarter1/Month03/Day09/More Complex note.md"
-    },
-    {
-      "slug": "webhook-test",
-      "title": "Webhook Test Note",
-      "date": "2026-03-09",
-      "tags": [
-        "test",
-        "webhook",
-        "isr"
-      ],
-      "featured": false,
-      "excerpt": "If you see this page, it means:",
-      "excalidrawRefs": [],
-      "filePath": "cards/Year2026/Quarter1/Month03/Day09/Webhook Test.md"
-    },
-    {
-      "slug": "test-document",
-      "title": "Test Document",
-      "date": "2026-03-07",
-      "tags": [
-        "test"
-      ],
-      "featured": false,
-      "excerpt": "This is for opencode so that we can test out our ISR feature",
-      "excalidrawRefs": [
-        "Drawing 2026-03-07 02.41.12.excalidraw"
-      ],
-      "filePath": "cards/Year2026/Quarter1/Month03/Day07/Test Document.md"
-    },
-    {
-      "slug": "cardsbanyanconfigeditorplaceholder",
-      "title": "editor_placeholder",
-      "date": "1970-01-01",
+      "slug": "how-this-website-is-made",
+      "title": "How this website is made",
+      "date": "2026-07-27",
       "tags": [],
       "featured": false,
-      "excerpt": "",
+      "excerpt": "The goal for this section of the site was to build a blog I could truly call my own. When working with teams or interviewing, I often find myself s...",
       "excalidrawRefs": [],
-      "filePath": "cards/banyan_config/editor_placeholder.md"
+      "filePath": "cards/Year2026/Quarter3/Month07/Day27/How this website is made.md"
     }
   ],
-  "excalidrawIndex": {
-    "Drawing 2026-03-07 02.41.12.excalidraw": [
-      "test-document"
-    ]
-  }
+  "excalidrawIndex": {}
 }

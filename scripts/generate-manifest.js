@@ -40,13 +40,23 @@ function getMarkdownFiles(dir, fileList = []) {
 }
 
 /**
+ * Remove fenced and inline code so manifest scans only real embeds.
+ */
+function stripCodeLiterals(content) {
+  return content
+    .replace(/^```[\s\S]*?^```/gm, '')
+    .replace(/`[^`]*`/g, '');
+}
+
+/**
  * Extract Excalidraw references like ![[diagram.excalidraw]]
  */
 function extractExcalidrawRefs(content) {
   const references = [];
   const regex = /!\[\[([^\]|]+\.excalidraw)(?:\|[^\]]*)?\]\]/g;
+  const searchable = stripCodeLiterals(content);
   let match;
-  while ((match = regex.exec(content)) !== null) {
+  while ((match = regex.exec(searchable)) !== null) {
     references.push(match[1]);
   }
   return references;

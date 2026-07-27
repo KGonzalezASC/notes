@@ -35,3 +35,7 @@
 .obsidian/themes/Primary/manifest.json
 .obsidian/themes/Primary/theme.css
 .obsidian/workspace.json
+
+# canvas sandbox
+/scratch/
+
