@@ -34,16 +34,6 @@
       "excerpt": "How an Obsidian-to-Git publishing workflow became a server-rendered developer notebook.",
       "excalidrawRefs": [],
       "filePath": "cards/Year2026/Quarter3/Month07/Day27/How this website is made.md"
-    },
-    {
-      "slug": "cardsbanyanconfigeditorplaceholder",
-      "title": "editor_placeholder",
-      "date": "1970-01-01",
-      "tags": [],
-      "featured": false,
-      "excerpt": "",
-      "excalidrawRefs": [],
-      "filePath": "cards/banyan_config/editor_placeholder.md"
     }
   ],
   "excalidrawIndex": {}
