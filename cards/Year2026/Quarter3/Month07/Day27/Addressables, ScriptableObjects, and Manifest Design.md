@@ -1,6 +1,6 @@
 ---
 title: Addressables, ScriptableObjects, and Manifest Design
-tags: [unity, addressables, scriptable-objects, manifests, webgl, caching, aws]
+tags: [unity, addressables, architecture]
 excerpt: How character selection led me from Unity ScriptableObjects and Addressables to signed manifests, match-pinned editions, and durable WebGL caching.
 ---
 
