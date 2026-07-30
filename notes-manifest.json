@@ -2,17 +2,27 @@
   "version": 2,
   "notes": [
     {
+      "slug": "editor-tooling-is-not-a-waste-of-time",
+      "title": "Editor Tooling Is Not a Waste of Time",
+      "date": "2026-07-29",
+      "tags": [
+        "unity",
+        "editor-tooling",
+        "authoring"
+      ],
+      "featured": false,
+      "excerpt": "Two projects taught me that editor tooling is not a detour from gameplay. It is how dense data and expensive test loops become manageable.",
+      "excalidrawRefs": [],
+      "filePath": "cards/Year2026/Quarter3/Month07/Day29/Editor Tooling Is Not a Waste of Time.md"
+    },
+    {
       "slug": "addressables-scriptableobjects-and-manifest-design",
       "title": "Addressables, ScriptableObjects, and Manifest Design",
       "date": "2026-07-27",
       "tags": [
         "unity",
         "addressables",
-        "scriptable-objects",
-        "manifests",
-        "webgl",
-        "caching",
-        "aws"
+        "architecture"
       ],
       "featured": false,
       "excerpt": "How character selection led me from Unity ScriptableObjects and Addressables to signed manifests, match-pinned editions, and durable WebGL caching.",
@@ -25,10 +35,8 @@
       "date": "2026-07-27",
       "tags": [
         "architecture",
-        "markdown",
         "obsidian",
-        "nextjs",
-        "vercel"
+        "publishing"
       ],
       "featured": false,
       "excerpt": "How an Obsidian-to-Git publishing workflow became a server-rendered developer notebook.",
