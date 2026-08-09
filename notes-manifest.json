@@ -2,6 +2,39 @@
   "version": 2,
   "notes": [
     {
+      "slug": "athens-core-omega",
+      "title": "Athens Core Ω",
+      "date": "2026-08-09",
+      "tags": [
+        "projects",
+        "archive",
+        "unity",
+        "fighting-game",
+        "team-project"
+      ],
+      "featured": false,
+      "excerpt": "A project archive record for a local two-player 2D fighting game prototype built with Unity and Aseprite.",
+      "excalidrawRefs": [],
+      "filePath": "cards/Year2026/Quarter3/Month08/Day09/Athens Core Omega.md"
+    },
+    {
+      "slug": "vr-interaction-systems",
+      "title": "VR Interaction Systems",
+      "date": "2026-08-09",
+      "tags": [
+        "projects",
+        "archive",
+        "vr",
+        "unity",
+        "interaction-design",
+        "architecture"
+      ],
+      "featured": false,
+      "excerpt": "A project archive of custom Unity VR interactions and a data-driven architecture for sequencing gameplay tasks.",
+      "excalidrawRefs": [],
+      "filePath": "cards/Year2026/Quarter3/Month08/Day09/VR Interaction Systems.md"
+    },
+    {
       "slug": "editor-tooling-is-not-a-waste-of-time",
       "title": "Editor Tooling Is Not a Waste of Time",
       "date": "2026-07-29",
