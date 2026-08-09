@@ -34,6 +34,12 @@ The project includes three playable characters with distinct archetypes, a unive
 
 The original page includes the Windows download, controls, project status, team credits, and the remaining gameplay media. This archive entry is a durable index to that work rather than a replacement for the original download page.
 
+## Trailer
+
+<iframe src="https://www.youtube-nocookie.com/embed/ynbSIDfoVqs" title="Athens Core Ω trailer"></iframe>
+
+[Open the trailer on YouTube](https://youtu.be/ynbSIDfoVqs?si=QYVlBl3QaDfnZrUY)
+
 ## Article status
 
 This project record will eventually become a fuller article. The future version can focus on the systems and production choices that are not visible from the download page, while keeping this slug and source link stable.
