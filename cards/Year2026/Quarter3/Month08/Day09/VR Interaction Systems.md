@@ -23,23 +23,23 @@ This archive preserves a set of custom Unity VR interaction systems and the game
 
 ### 1. Twist socket interactor
 
-[Interaction reference](https://drive.google.com/file/d/1ACUe0-aDbZiRD4nzQZevWsdaUKEvaXU-/view?usp=drive_link)
+<iframe src="https://drive.google.com/file/d/1ACUe0-aDbZiRD4nzQZevWsdaUKEvaXU-/preview" title="Interaction 1: Twist Socket interactor"></iframe>
 
 The user can take regular grab interactables and insert them into sockets. Reclaiming the object requires twisting until the socket reaches its specified torque threshold and releases the screw. Twist sockets support screwing with or without tools depending on the process configuration.
 
 **Use cases:** Screwing in parts, twist valves, knobs, and levers.
 
-[Gameplay VOD](https://drive.google.com/file/d/1GGq1u-6GJHE8qe7I03rUT0LlGOXwd790/view?usp=drive_link)
+<iframe src="https://drive.google.com/file/d/1GGq1u-6GJHE8qe7I03rUT0LlGOXwd790/preview" title="Twist Socket interactor gameplay VOD"></iframe>
 
 ### 2. Staged socket installation
 
-[Interaction reference](https://drive.google.com/file/d/1lmxeoCekyM90we3GRfQY2Wxg16PZOUIH/view?usp=drive_link)
+<iframe src="https://drive.google.com/file/d/1lmxeoCekyM90we3GRfQY2Wxg16PZOUIH/preview" title="Interaction 2: Staged socket installation"></iframe>
 
 Installing an object provides a short time buffer for completing the interaction. The ejection action—an object falling because it was not secured—is queued into a command buffer and can be stopped by installing and twisting in a screw.
 
 ### 3. Two-handed grab interactables
 
-[Interaction reference](https://drive.google.com/file/d/1fhHlzIXu9P-aZ6zCVwdj3k_vez1crCIL/view?usp=drive_link)
+<iframe src="https://drive.google.com/file/d/1fhHlzIXu9P-aZ6zCVwdj3k_vez1crCIL/preview" title="Interaction 3: Two-handed grab interactables"></iframe>
 
 When a grab interactable uses multiple selection, Unity normally treats one hand as the position and the other as a pivot. This custom interaction instead keeps the object between both hands and lets the user twist it with both hands in tandem.
 
@@ -49,7 +49,7 @@ The system also implements predictive visual transforms so the result can remain
 
 ### 4. Dynamic socket interactor
 
-[Interaction reference](https://drive.google.com/file/d/1Sm8f9UDH04GXFTyw5eubbfM8rWZfyikS/view?usp=drive_link)
+<iframe src="https://drive.google.com/file/d/1Sm8f9UDH04GXFTyw5eubbfM8rWZfyikS/preview" title="Interaction 4: Dynamic socket interactor"></iframe>
 
 Standard sockets place an item at one configured attachment transform. This custom socket allows the item to attach at any position within the socket's trigger area.
 
@@ -57,19 +57,19 @@ Standard sockets place an item at one configured attachment transform. This cust
 
 ### 5. Multi-dynamic socket interactor
 
-[Interaction reference](https://drive.google.com/file/d/1zxDLXqwpysWiYaWEYuKjjEdWJ8bDqjP3/view?usp=drive_link)
+<iframe src="https://drive.google.com/file/d/1zxDLXqwpysWiYaWEYuKjjEdWJ8bDqjP3/preview" title="Interaction 5: Multi-dynamic socket interactor"></iframe>
 
 Multiple objects can be placed on the same socket surface at the same time.
 
 ### 6. Locking socket
 
-[Interaction reference](https://drive.google.com/file/d/1klGVLDXuEXS6qkagsTWk3v8ohYrgF72c/view?usp=drive_link)
+<iframe src="https://drive.google.com/file/d/1klGVLDXuEXS6qkagsTWk3v8ohYrgF72c/preview" title="Interaction 6: Locking socket"></iframe>
 
 A locking socket is useful when a main grab interactable contains sub-interactions but the parent object should not be accidentally grabbed.
 
 ### 7. VR doors
 
-[Interaction reference](https://drive.google.com/file/d/1FKdyfeRlTfXOsOPeMfPRARy-XOMgEtLr/view?usp=drive_link)
+<iframe src="https://drive.google.com/file/d/1FKdyfeRlTfXOsOPeMfPRARy-XOMgEtLr/preview" title="Interaction 7: VR doors"></iframe>
 
 VR doors cannot be treated as ordinary grab interactables because their tracking modes can fight with Unity hinge physics. This interaction translates interactor input into a form that works cleanly with a Unity hinge.
 
