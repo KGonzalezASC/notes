@@ -1,7 +1,7 @@
 ---
 title: Editor Tooling Is Not a Waste of Time
 tags: [unity, editor-tooling, authoring]
-category: tradeoffs
+category: experiments
 excerpt: Two projects taught me that editor tooling is not a detour from gameplay. It is how dense data and expensive test loops become manageable.
 ---
 

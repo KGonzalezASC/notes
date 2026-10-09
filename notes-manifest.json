@@ -45,7 +45,7 @@
         "editor-tooling",
         "authoring"
       ],
-      "category": "tradeoffs",
+      "category": "experiments",
       "featured": false,
       "excerpt": "Two projects taught me that editor tooling is not a detour from gameplay. It is how dense data and expensive test loops become manageable.",
       "excalidrawRefs": [],
@@ -60,7 +60,7 @@
         "addressables",
         "architecture"
       ],
-      "category": "tradeoffs",
+      "category": "experiments",
       "featured": false,
       "excerpt": "How character selection led me from Unity ScriptableObjects and Addressables to signed manifests, match-pinned editions, and durable WebGL caching.",
       "excalidrawRefs": [],
