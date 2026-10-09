@@ -270,6 +270,8 @@ function main() {
     const title = metadata.title || extractTitleFromHeading(body, titleFallback);
     const date = resolveNoteDate(metadata, relativePath);
     const tags = Array.isArray(metadata.tags) ? metadata.tags : [];
+    const category =
+      typeof metadata.category === 'string' && metadata.category ? metadata.category : undefined;
     const featured = metadata.featured === true;
     const excerpt = metadata.excerpt || extractExcerpt(body);
     const excalidrawRefs = extractExcalidrawRefs(body);
@@ -279,6 +281,7 @@ function main() {
       title,
       date,
       tags,
+      ...(category ? { category } : {}),
       featured,
       excerpt,
       excalidrawRefs,

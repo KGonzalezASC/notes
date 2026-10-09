@@ -9,6 +9,7 @@ tags:
   - unity
   - interaction-design
   - architecture
+category: big-projects
 featured: false
 excerpt: A project archive of custom Unity VR interactions and a data-driven architecture for sequencing gameplay tasks.
 ---

@@ -8,6 +8,7 @@ tags:
   - unity
   - fighting-game
   - team-project
+category: big-projects
 featured: false
 excerpt: A project archive record for a local two-player 2D fighting game prototype built with Unity and Aseprite.
 ---

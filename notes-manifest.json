@@ -12,6 +12,7 @@
         "fighting-game",
         "team-project"
       ],
+      "category": "big-projects",
       "featured": false,
       "excerpt": "A project archive record for a local two-player 2D fighting game prototype built with Unity and Aseprite.",
       "excalidrawRefs": [],
@@ -29,6 +30,7 @@
         "interaction-design",
         "architecture"
       ],
+      "category": "big-projects",
       "featured": false,
       "excerpt": "A project archive of custom Unity VR interactions and a data-driven architecture for sequencing gameplay tasks.",
       "excalidrawRefs": [],
@@ -43,6 +45,7 @@
         "editor-tooling",
         "authoring"
       ],
+      "category": "tradeoffs",
       "featured": false,
       "excerpt": "Two projects taught me that editor tooling is not a detour from gameplay. It is how dense data and expensive test loops become manageable.",
       "excalidrawRefs": [],
@@ -57,6 +60,7 @@
         "addressables",
         "architecture"
       ],
+      "category": "tradeoffs",
       "featured": false,
       "excerpt": "How character selection led me from Unity ScriptableObjects and Addressables to signed manifests, match-pinned editions, and durable WebGL caching.",
       "excalidrawRefs": [],
@@ -71,6 +75,7 @@
         "obsidian",
         "publishing"
       ],
+      "category": "deep-dives",
       "featured": false,
       "excerpt": "How an Obsidian-to-Git publishing workflow became a server-rendered developer notebook.",
       "excalidrawRefs": [],
