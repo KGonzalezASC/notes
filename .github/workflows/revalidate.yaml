@@ -5,9 +5,25 @@ on:
     branches: [main]
     paths:
       - "**/*.md"
-      - "scripts/generate-manifest.js"
+      - "**/*.[pP][nN][gG]"
+      - "**/*.[jJ][pP][gG]"
+      - "**/*.[jJ][pP][eE][gG]"
+      - "**/*.[wW][eE][bB][pP]"
+      - "**/*.[gG][iI][fF]"
+      - "**/*.[sS][vV][gG]"
+      - "**/*.[aA][vV][iI][fF]"
+      - "**/*.[bB][mM][pP]"
+      - "scripts/**"
+      - "package.json"
+      - "bun.lock"
       - "notes-manifest.json"
+      - "notes-media-manifest.json"
       - ".github/workflows/revalidate.yaml"
+  workflow_dispatch:
+
+concurrency:
+  group: notes-publishing-main
+  cancel-in-progress: false
 
 jobs:
   revalidate:
@@ -21,48 +37,94 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Diff the push that triggered this run — before any auto-commit of the
-      # manifest, which would otherwise make HEAD~1..HEAD look like a
-      # manifest-only change and leave addedModified empty.
-      - name: Get changed files
-        id: changed
+      - name: Reject superseded source revisions
         run: |
-          BEFORE_SHA="${{ github.event.before }}"
-          AFTER_SHA="${{ github.sha }}"
-          if [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ]; then
-            ADDED_MODIFIED=$(git ls-files '*.md' | jq -R -s -c 'split("\n")[:-1]')
-            DELETED="[]"
-          else
-            ADDED_MODIFIED=$(git diff --name-only --diff-filter=AM "$BEFORE_SHA" "$AFTER_SHA" -- '*.md' | jq -R -s -c 'split("\n")[:-1]')
-            DELETED=$(git diff --name-only --diff-filter=D "$BEFORE_SHA" "$AFTER_SHA" -- '*.md' | jq -R -s -c 'split("\n")[:-1]')
-          fi
-          # Always include the manifest so /notes index revalidates
-          ADDED_MODIFIED=$(echo "$ADDED_MODIFIED" | jq -c '. + ["notes-manifest.json"] | unique')
-          echo "added_modified=$ADDED_MODIFIED" >> $GITHUB_OUTPUT
-          echo "deleted=$DELETED" >> $GITHUB_OUTPUT
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$GITHUB_SHA" || {
+            echo "Source changed before publishing. Run the workflow on the latest main revision."
+            exit 1
+          }
 
-      - name: Generate Notes Manifest
+      - name: Capture source changes before generated commits
+        id: changed
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          if [ -z "$BEFORE_SHA" ] || [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            ADDED_MODIFIED=$(git ls-files '*.md' | jq -R -s -c 'split("\n")[:-1]')
+            DELETED='[]'
+          else
+            ADDED_MODIFIED=$(git diff --name-only --diff-filter=AMR "$BEFORE_SHA" "$GITHUB_SHA" | jq -R -s -c 'split("\n")[:-1]')
+            DELETED=$(git diff --name-only --diff-filter=D "$BEFORE_SHA" "$GITHUB_SHA" | jq -R -s -c 'split("\n")[:-1]')
+          fi
+          ADDED_MODIFIED=$(echo "$ADDED_MODIFIED" | jq -c '. + ["notes-manifest.json", "notes-media-manifest.json"] | unique')
+          echo "added_modified=$ADDED_MODIFIED" >> "$GITHUB_OUTPUT"
+          echo "deleted=$DELETED" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.0'
+      - name: Install locked publishing dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Publish referenced media
+        id: media
+        env:
+          SOURCE_REVISION: ${{ github.sha }}
+          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+          NOTES_BLOB_HOST: ${{ vars.NOTES_BLOB_HOST }}
+          NOTES_MEDIA_MODE: ${{ vars.NOTES_MEDIA_MODE }}
+        run: |
+          case "$NOTES_MEDIA_MODE" in
+            blob) node scripts/publish-media.mjs ;;
+            github-only) node scripts/publish-media.mjs --github-only ;;
+            *) echo 'Set NOTES_MEDIA_MODE to blob or explicitly to github-only in environment env.'; exit 1 ;;
+          esac
+
+      - name: Generate notes manifest
         run: node scripts/generate-manifest.js
 
-      - name: Commit and Push Manifest
+      - name: Commit completed metadata without rebasing stale mappings
+        id: committed
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add notes-manifest.json
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$GITHUB_SHA" || {
+            echo 'Source changed during generation. Refusing stale metadata and webhook. The next run must regenerate.'
+            exit 1
+          }
+          git config --local user.email 'action@github.com'
+          git config --local user.name 'GitHub Action'
+          git add notes-manifest.json notes-media-manifest.json
           if ! git diff --cached --quiet; then
-            git commit -m "Auto-generate notes-manifest.json [skip ci]"
-            git push origin main
-          else
-            echo "No changes in notes-manifest.json"
+            git commit -m 'Publish completed notes and media metadata [skip ci]'
+            # A normal push rejects a concurrent source change. Never rebase generated JSON.
+            git push origin HEAD:main
           fi
+          echo "published_revision=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Call revalidation webhook
+      - name: Revalidate only after metadata is readable
+        env:
+          REVALIDATE_SECRET_TOKEN: ${{ secrets.REVALIDATE_SECRET_TOKEN }}
+          PORTFOLIO_WEBHOOK_URL: ${{ secrets.PORTFOLIO_WEBHOOK_URL }}
+          ADDED_MODIFIED: ${{ steps.changed.outputs.added_modified }}
+          DELETED: ${{ steps.changed.outputs.deleted }}
+          AFFECTED_SLUGS: ${{ steps.media.outputs.affected_slugs }}
+          PUBLISHED_REVISION: ${{ steps.committed.outputs.published_revision }}
         run: |
-          curl --fail-with-body --location --retry 2 -X POST \
-            -H "Content-Type: application/json" \
-            -d '{
-              "secret": "${{ secrets.REVALIDATE_SECRET_TOKEN }}",
-              "addedModified": ${{ steps.changed.outputs.added_modified }},
-              "deleted": ${{ steps.changed.outputs.deleted }}
-            }' \
-            ${{ secrets.PORTFOLIO_WEBHOOK_URL }}
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$PUBLISHED_REVISION" || {
+            echo 'Source advanced after metadata commit. Refusing out-of-order revalidation.'; exit 1
+          }
+          jq -n '{secret: env.REVALIDATE_SECRET_TOKEN, addedModified: (env.ADDED_MODIFIED | fromjson), deleted: (env.DELETED | fromjson), affectedSlugs: (env.AFFECTED_SLUGS | fromjson), publishedRevision: env.PUBLISHED_REVISION}' > "$RUNNER_TEMP/revalidate.json"
+          trap 'rm -f "$RUNNER_TEMP/revalidate.json"' EXIT
+          for attempt in 1 2 3 4; do
+            STATUS=$(curl --silent --show-error --connect-timeout 15 --max-time 60 \
+              -o "$RUNNER_TEMP/revalidate-response.json" -w '%{http_code}' \
+              -H 'Content-Type: application/json' --data-binary "@$RUNNER_TEMP/revalidate.json" "$PORTFOLIO_WEBHOOK_URL") || STATUS=000
+            if [ "$STATUS" = 200 ]; then cat "$RUNNER_TEMP/revalidate-response.json"; exit 0; fi
+            if [ "$STATUS" != 409 ] && [ "$STATUS" != 503 ] && [ "$STATUS" != 000 ]; then
+              cat "$RUNNER_TEMP/revalidate-response.json"; exit 1
+            fi
+            sleep "$((attempt * 5))"
+          done
+          echo "Revalidation failed after bounded retries: HTTP $STATUS"; exit 1

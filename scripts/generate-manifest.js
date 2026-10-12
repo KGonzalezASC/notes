@@ -28,6 +28,7 @@ function pathToSlug(filePath) {
 function getMarkdownFiles(dir, fileList = []) {
   const files = fs.readdirSync(dir);
   for (const file of files) {
+    if (file === 'banyan_config' || file.startsWith('.')) continue;
     const filePath = path.join(dir, file);
     const stat = fs.statSync(filePath);
     if (stat.isDirectory()) {
@@ -264,12 +265,14 @@ function main() {
     const relativePath = path.relative(path.join(__dirname, '..'), file).replace(/\\/g, '/');
     const slug = pathToSlug(relativePath);
     const { metadata, body } = parseFrontmatter(content);
+    if (metadata.draft === true || relativePath.endsWith('.excalidraw.md')) continue;
 
     // Standardize metadata keys
     const titleFallback = path.basename(file, '.md');
     const title = metadata.title || extractTitleFromHeading(body, titleFallback);
     const date = resolveNoteDate(metadata, relativePath);
     const tags = Array.isArray(metadata.tags) ? metadata.tags : [];
+    const tagAliases = Array.isArray(metadata.tagAliases) ? metadata.tagAliases : [];
     const category =
       typeof metadata.category === 'string' && metadata.category ? metadata.category : undefined;
     const featured = metadata.featured === true;
@@ -281,6 +284,7 @@ function main() {
       title,
       date,
       tags,
+      ...(tagAliases.length ? { tagAliases } : {}),
       ...(category ? { category } : {}),
       featured,
       excerpt,

@@ -36,6 +36,11 @@
 .obsidian/themes/Primary/theme.css
 .obsidian/workspace.json
 
+# Publishing dependencies and private credentials
+/node_modules/
+.env*
+notes-media-manifest.json.tmp
+
 # canvas sandbox
 /scratch/
 

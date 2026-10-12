@@ -3,12 +3,13 @@ title: VR Interaction Systems
 description: A project archive of custom Unity VR interactions and a data-driven architecture for sequencing gameplay tasks.
 date: 2026-08-09
 tags:
+  - unity
+  - architecture
+  - vr
+tagAliases:
   - projects
   - archive
-  - vr
-  - unity
   - interaction-design
-  - architecture
 category: big-projects
 featured: false
 excerpt: A project archive of custom Unity VR interactions and a data-driven architecture for sequencing gameplay tasks.
@@ -24,7 +25,9 @@ This archive preserves a set of custom Unity VR interaction systems and the game
 
 ### 1. Twist socket interactor
 
-<iframe src="https://drive.google.com/file/d/1ACUe0-aDbZiRD4nzQZevWsdaUKEvaXU-/preview" title="Interaction 1: Twist Socket interactor"></iframe>
+![Twist socket interactor code overview](assets/twist-socket.png "Twist socket interactor code overview")
+
+[View the original diagram on Google Drive](https://drive.google.com/file/d/1ACUe0-aDbZiRD4nzQZevWsdaUKEvaXU-/view)
 
 The user can take regular grab interactables and insert them into sockets. Reclaiming the object requires twisting until the socket reaches its specified torque threshold and releases the screw. Twist sockets support screwing with or without tools depending on the process configuration.
 

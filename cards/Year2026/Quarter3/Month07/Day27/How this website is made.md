@@ -1,6 +1,7 @@
 ---
 title: How this website is made
-tags: [architecture, obsidian, publishing]
+tags: [architecture, tooling]
+tagAliases: [obsidian, publishing]
 category: deep-dives
 excerpt: How an Obsidian-to-Git publishing workflow became a server-rendered developer notebook.
 ---

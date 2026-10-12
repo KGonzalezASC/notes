@@ -3,9 +3,10 @@ title: Athens Core Ω
 description: A project archive record for a local two-player 2D fighting game prototype built with Unity and Aseprite.
 date: 2026-08-09
 tags:
-  - published-games
-  - archive
   - unity
+  - published-games
+tagAliases:
+  - archive
   - fighting-game
   - team-project
 category: big-projects
