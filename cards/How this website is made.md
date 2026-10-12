@@ -1,4 +1,5 @@
 ---
+date: 2026-07-27
 title: How this website is made
 tags: [architecture, tooling]
 tagAliases: [obsidian, publishing]

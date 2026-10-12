@@ -2,7 +2,7 @@
 
 ## Status
 
-The publisher and portfolio consumer are implemented locally. Cloud publishing is not yet configured or verified.
+Vercel Blob and the GitHub publishing Action are configured. A successful notes push uploads referenced images and refreshes the affected website articles.
 
 The original twist-socket PNG lives in `assets/twist-socket.png`. The VR article now embeds that image and retains its Google Drive source link.
 
@@ -10,7 +10,9 @@ The original twist-socket PNG lives in `assets/twist-socket.png`. The VR article
 
 In Obsidian, set **Settings → Files and links → Default location for new attachments → In the folder specified below** to `assets`.
 
-This setting was not changed automatically. Existing Obsidian settings remain untouched.
+This vault is configured to save attachments in `assets` and new notes directly in `cards`. Banyan also uses `cards`, without creating date folders. The website uses the note's `date: YYYY-MM-DD` property, so set it when authoring a new article. Existing publication dates and URLs are preserved.
+
+Write your article in Obsidian, paste images, then commit and push the note and its attachments. The GitHub Action generates the manifests and publishes the media automatically. Pull before your next batch of commits, because the Action commits generated metadata back to the repository.
 
 Paste or drop an image into a note, then keep the reference local:
 
@@ -58,7 +60,7 @@ bun run media:publish
 
 That command requires `BLOB_READ_WRITE_TOKEN` and `NOTES_BLOB_HOST` in the process environment. Never place either credential value in Markdown or client code.
 
-The generated media manifest must be refreshed locally after changing references or replacing images. A deployment never serves the development attachment route.
+The GitHub Action refreshes the media manifest after changing references or replacing images. Refresh it locally only when testing changes before a push. A deployment never serves the development attachment route.
 
 ## Media manifest v1
 

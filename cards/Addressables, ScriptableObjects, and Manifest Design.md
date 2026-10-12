@@ -1,4 +1,5 @@
 ---
+date: 2026-07-27
 title: Addressables, ScriptableObjects, and Manifest Design
 tags: [architecture, unity, multiplayer]
 tagAliases: [addressables]

@@ -12,7 +12,7 @@ function pathToSlug(filePath) {
   // Normalize windows backslashes to forward slashes for regex consistency
   const normalized = filePath.replace(/\\/g, '/');
   // Strip cards/YearYYYY/QuarterQ/MonthMM/DayDD/
-  const withoutHierarchy = normalized.replace(/^cards\/[^/]+\/[^/]+\/[^/]+\/[^/]+\//, '');
+  const withoutHierarchy = normalized.replace(/^cards\/(?:Year\d{4}\/Quarter\d\/Month\d{2}\/Day\d{2}\/)?/, '');
 
   return withoutHierarchy
     .replace(/\.md$/, '')

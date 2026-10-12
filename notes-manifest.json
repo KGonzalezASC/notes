@@ -18,7 +18,7 @@
       "featured": false,
       "excerpt": "A project archive record for a local two-player 2D fighting game prototype built with Unity and Aseprite.",
       "excalidrawRefs": [],
-      "filePath": "cards/Year2026/Quarter3/Month08/Day09/Athens Core Omega.md"
+      "filePath": "cards/Athens Core Omega.md"
     },
     {
       "slug": "vr-interaction-systems",
@@ -38,7 +38,7 @@
       "featured": false,
       "excerpt": "A project archive of custom Unity VR interactions and a data-driven architecture for sequencing gameplay tasks.",
       "excalidrawRefs": [],
-      "filePath": "cards/Year2026/Quarter3/Month08/Day09/VR Interaction Systems.md"
+      "filePath": "cards/VR Interaction Systems.md"
     },
     {
       "slug": "editor-tooling-is-not-a-waste-of-time",
@@ -57,7 +57,7 @@
       "featured": false,
       "excerpt": "Two projects taught me that editor tooling is not a detour from gameplay. It is how dense data and expensive test loops become manageable.",
       "excalidrawRefs": [],
-      "filePath": "cards/Year2026/Quarter3/Month07/Day29/Editor Tooling Is Not a Waste of Time.md"
+      "filePath": "cards/Editor Tooling Is Not a Waste of Time.md"
     },
     {
       "slug": "addressables-scriptableobjects-and-manifest-design",
@@ -75,7 +75,7 @@
       "featured": false,
       "excerpt": "How character selection led me from Unity ScriptableObjects and Addressables to signed manifests, match-pinned editions, and durable WebGL caching.",
       "excalidrawRefs": [],
-      "filePath": "cards/Year2026/Quarter3/Month07/Day27/Addressables, ScriptableObjects, and Manifest Design.md"
+      "filePath": "cards/Addressables, ScriptableObjects, and Manifest Design.md"
     },
     {
       "slug": "how-this-website-is-made",
@@ -93,7 +93,7 @@
       "featured": false,
       "excerpt": "How an Obsidian-to-Git publishing workflow became a server-rendered developer notebook.",
       "excalidrawRefs": [],
-      "filePath": "cards/Year2026/Quarter3/Month07/Day27/How this website is made.md"
+      "filePath": "cards/How this website is made.md"
     }
   ],
   "excalidrawIndex": {}

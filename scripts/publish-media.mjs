@@ -67,7 +67,7 @@ function resolveAttachment(notePath, reference, obsidian) {
   if (!match) throw new Error(`Missing attachment ${reference} in ${notePath}`);
   return match;
 }
-const slugFor = (file) => file.replace(/^cards\/[^/]+\/[^/]+\/[^/]+\/[^/]+\//, '').replace(/\.md$/, '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+const slugFor = (file) => file.replace(/^cards\/(?:Year\d{4}\/Quarter\d\/Month\d{2}\/Day\d{2}\/)?/, '').replace(/\.md$/, '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 const notes = {};
 const noteHashes = {};
 const parents = {};

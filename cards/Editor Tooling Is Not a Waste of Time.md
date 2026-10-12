@@ -1,4 +1,5 @@
 ---
+date: 2026-07-29
 title: Editor Tooling Is Not a Waste of Time
 tags: [tooling, unity, multiplayer]
 tagAliases: [editor-tooling, authoring]
