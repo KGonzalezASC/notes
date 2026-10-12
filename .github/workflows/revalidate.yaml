@@ -28,6 +28,7 @@ concurrency:
 jobs:
   revalidate:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment: env
     permissions:
       contents: write
@@ -117,7 +118,9 @@ jobs:
           }
           jq -n '{secret: env.REVALIDATE_SECRET_TOKEN, addedModified: (env.ADDED_MODIFIED | fromjson), deleted: (env.DELETED | fromjson), affectedSlugs: (env.AFFECTED_SLUGS | fromjson), publishedRevision: env.PUBLISHED_REVISION}' > "$RUNNER_TEMP/revalidate.json"
           trap 'rm -f "$RUNNER_TEMP/revalidate.json"' EXIT
-          for attempt in 1 2 3 4; do
+          # GitHub raw main can retain its previous response for several minutes.
+          # Keep the freshness gate and allow it to converge before failing publication.
+          for attempt in $(seq 1 16); do
             STATUS=$(curl --silent --show-error --connect-timeout 15 --max-time 60 \
               -o "$RUNNER_TEMP/revalidate-response.json" -w '%{http_code}' \
               -H 'Content-Type: application/json' --data-binary "@$RUNNER_TEMP/revalidate.json" "$PORTFOLIO_WEBHOOK_URL") || STATUS=000
@@ -125,6 +128,6 @@ jobs:
             if [ "$STATUS" != 409 ] && [ "$STATUS" != 503 ] && [ "$STATUS" != 000 ]; then
               cat "$RUNNER_TEMP/revalidate-response.json"; exit 1
             fi
-            sleep "$((attempt * 5))"
+            if [ "$attempt" -lt 16 ]; then sleep 20; fi
           done
           echo "Revalidation failed after bounded retries: HTTP $STATUS"; exit 1
