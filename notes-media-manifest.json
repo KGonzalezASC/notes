@@ -4,13 +4,13 @@
     "assets/twist-socket.png": {
       "path": "assets/twist-socket.png",
       "hash": "9c86d438f1bce559e3671a6c664e129ff28f60a2d516eedefbb4a761598b5503",
-      "sourceRevision": null,
+      "sourceRevision": "25ecf9cf2091842b2a03fbea203a1748f5a79d87",
       "mimeType": "image/png",
       "width": 5759,
       "height": 10968,
       "bytes": 2201606,
       "url": "https://6axlzpfigfisotfg.public.blob.vercel-storage.com/notes-media/9c86d438f1bce559e3671a6c664e129ff28f60a2d516eedefbb4a761598b5503/original.png",
-      "fallbackUrl": "https://raw.githubusercontent.com/KGonzalezASC/notes/main/assets/twist-socket.png"
+      "fallbackUrl": "https://raw.githubusercontent.com/KGonzalezASC/notes/25ecf9cf2091842b2a03fbea203a1748f5a79d87/assets/twist-socket.png"
     }
   },
   "notes": {
