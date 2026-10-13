@@ -7,157 +7,76 @@ category: experiments
 excerpt: How character selection led me from Unity ScriptableObjects and Addressables to signed manifests, match-pinned editions, and durable WebGL caching.
 ---
 
-During my time at Skillcade, one of my deliverables was designing a character data pipeline for my game.
+At Skillcade, I designed a character data pipeline for my game.
 
-Skillcade operated as a single-page application. Players moved through a series of routes, starting with game selection, continuing to player count, and ending at the game itself. My fighting game added a character-selection step where each player chose a fighter before the match began.
+The site was a single-page application backed by PAM, which handled matchmaking and game deployments across the platform. Players first selected a game, then chose the number of players before entering it. My fighting game added a character selection page on the site, where each player chose a fighter before the game itself loaded.
 
-We separated that step partly to conserve server capacity. There was no reason to allocate an Edgegap server while both players were still choosing characters. This reduced the server bandwidth consumed by matches that were cancelled early.
+Keeping character selection on the site also helped conserve server capacity. There was no reason to allocate a server through Edgegap, our game server hosting provider, while players were still choosing characters. If they cancelled at that point, we hadn’t used server resources for a match that never started.
 
-At first, I thought I was designing a character database.
+On the platform side, PAM’s `games.json` listed the characters available for selection and their images, along with the paths to the game’s WebGL build files. Those build files were hosted in an S3 bucket, Amazon’s file storage service.
 
-During early development, that was mostly true. I tested with only two characters at a time and replaced one whenever I needed to validate a new addition. The game needed a database that described the available characters and gave the rest of the project a stable way to find them. ScriptableObjects handled that part well.
+As I started thinking about how to publish and update the characters, there was more to account for than the setup I used during development.
 
-The rest of the pipeline did not stay that simple.
+Skillcade was a real-money gaming platform, so we wanted greater control over client-side content delivery and stronger protections against unauthorized modification that could affect a match. Part of that approach was keeping the entire character roster out of the initial WebGL build.
 
-Skillcade was a real-money gaming platform, so we wanted to harden the delivery path and make it more difficult for clients to inspect or modify content. One part of that approach was preventing the initial WebGL build from containing the entire character roster.
+Delivering character content separately also gave us a way to avoid rebuilding the game for every character change. WebGL builds took time to produce, and publishing one meant redeploying the game through PAM. Since PAM served every game on the platform, updating it could affect all titles, not just mine. I wanted to be able to add or update a character without rebuilding the entire client or redeploying the match server.
 
-There were also practical deployment concerns. WebGL builds took time to produce, and publishing one meant redeploying the game through PAM (Skillcade's platform backend for the SPA, matchmaking, and game deploys). Because of that release cycle, adding or updating a character should not require rebuilding the entire client or redeploying the match server.
+I also didn’t want returning players to download the same character content every time they played. Keeping a local copy made sense, but after a character update, one player might still have the old version while their opponent had the new one. Since the game used deterministic simulation, that difference could put their games out of sync. I needed both players to load the same character data before the match started.
 
-Returning players should not repeatedly download content they already had. Most importantly, both peers in a deterministic match had to simulate the exact same character data.
+## Loading characters with Addressables
 
-What began as a character database became a contract between publishing, matchmaking, caching, and the game client. Each new requirement introduced a responsibility that ScriptableObjects alone were never meant to own.
+During early development, every character was packaged into the initial WebGL build. As the roster grew, so did the amount of content players had to download before the client could start. I wanted to keep creating and editing characters in Unity while reducing that initial wait time.
 
-That separation eventually became the architecture.
+Based on [Unity’s Addressables documentation](https://docs.unity3d.com/Packages/com.unity.addressables@1.21/manual/AssetDependencies.html), Addressables could package the character assets into remote bundles and download them when needed. We could keep authoring characters as ScriptableObjects while changing how their assets were referenced, packaged, and loaded by the game.
 
-## ScriptableObjects and authored data
+The game loaded each character using an Addressable key, such as `Crabbus`. Addressables used that key to find the character’s asset bundle and download it if needed, so the game didn’t have to manage the bundle’s location itself.
 
-The first responsibility was authoring.
-
-Each character needed a durable, editor-friendly record containing its gameplay data and references. A `CharacterDatabase` ScriptableObject stored the roster, and `GameSessionManager` exposed that database to the rest of the project.
-
-Gameplay systems could work with a stable character key and resolve the associated data without scattering configuration across scenes or individual MonoBehaviours. The roster also remained visible and editable inside the Unity editor, which made ScriptableObjects a natural source of truth for authored game data.
-
-On paper, careful use of those primitives meant a new character should not strictly increase binary size. In practice we still shipped every character inside the initial WebGL build, so the download remained larger than it needed to be.
-
-The authoring model did not need to become the delivery model.
-
-## Addressables and asset delivery
-
-Unity Addressables introduced the next separation.
-
-A character could retain a stable identity while its built asset bundle lived outside the initial player download. The game could request a character by key and let Addressables resolve where its content lived.
-
-The game layer used an `AddressableManager` to load assets and retain their `AsyncOperationHandle` instances for the lifetime of the scene:
+My `AddressableManager` kept track of assets loaded during the scene. Each load returned an `AsyncOperationHandle`, which tracked the loading operation and provided access to the asset once it was ready. I stored those handles so that if the game requested the same character again, the manager could return the asset it had already loaded:
 
 ```csharp {walkthrough}
-// @step lookup : Reuse an asset already resolved during this scene | Avoid loading the same character twice
+// @step lookup: Reuse a loaded asset | Return it immediately if its stored handle is still valid.
 if (loadedHandles.TryGetValue(label, out var existingHandle))
 {
     if (existingHandle.IsValid())
         return existingHandle.Result as T;
 }
 
-// @step load : Resolve the asset through its stable Addressable key | Download its bundle when necessary
+// @step load: Load the requested asset | Addressables resolves the key and downloads dependencies if needed.
 AsyncOperationHandle<T> loadHandle = Addressables.LoadAssetAsync<T>(label);
 await loadHandle.Task;
 
-// @step retain : Keep the resolved asset alive for this scene | Release the handle with the scene-local manager
+// @step retain: Store the handle | Keep the asset available for another request during this scene.
 loadedHandles[label] = loadHandle;
 return loadHandle.Result;
 ```
+ It also made it worth being more precise about which character changes actually required a new game build.
 
-That solved asset lookup and on-demand delivery, but it exposed another distinction.
+## Updating characters without rebuilding the game
 
-An Addressables handle represents an in-memory Unity reference. Releasing that handle does not necessarily mean the browser must delete the downloaded bundle bytes. Those bytes may still exist in Unity's cache, the browser cache, or a service-worker-managed cache.
+Some changes affect the networked simulation itself. Combat code, serialization, netcode behavior, and protocol changes still require a new client build and a compatible server deployment.
 
-The resolved object and its downloaded bytes belonged to different lifecycles.
+The leaf node system was a large part of making character behavior editable as data. I could combine conditions, such as checking whether a character was falling, with actions, such as applying an impulse or changing state. Those pieces formed behavior trees stored in the character’s ScriptableObject data, with Odin editor tooling to configure them.
 
-That led to a boundary between the SDK and the game layer. The SDK prepared the required content without owning game-specific objects. Once the bytes were available, the game could resolve and use the actual character assets.
+As long as a new character used mechanics the client already understood, It was possible to define entire characters as only a new Addressables bundle. The client wasn’t tied to a fixed list of characters; it could load compatible data and run the behavior described by those trees.
 
-```csharp {walkthrough}
-// @step select : Read the character keys selected for this match | Ignore content the players do not need
-string[] keys = payload.GetCharacterKeys();
+That gave me room to create new characters by combining existing mechanics. If a character needed a new leaf node or system mechanic, I would still have to implement it in game code and update the client.
 
-// @step warm : Download the required dependencies before connection | Do not resolve gameplay objects yet
-await AddressablePayloadLoader.LoadAssetsAsync(keys, cancellationToken);
+To track those two kinds of change separately here was the underlying rationale I came up with:
 
-// @step play : Resolve the character through the game layer | Addressables can reuse the warmed bytes
-CharacterData character =
-    await addressableManager.LoadAddressable<CharacterData>(key);
-```
+| Version | What it describes | Bumped when | Cost of change |
+| --- | --- | --- | --- |
+| Client or engine version | Combat code, netcode, serialization, and runtime behavior | Networked simulation changes | Client build and server redeploy |
+| Content version | The available characters and their exact published bytes | Roster or balance content changes | Bundle publish and manifest signing |
 
-## Deterministic multiplayer
+Separating those versions gave character updates their own release process. But once content could change independently, the character key alone wasn’t enough to tell a match what to load.
 
-Knowing where an asset lived did not tell two clients which edition of that asset they were expected to load.
+## Giving each match a content edition
 
-In a typical application, loading the newest available content may be acceptable. In a live-service fighting game, it can break the match.
+Two players could both select `Crabbus` and still load different versions of its moves, frame data, collision values, or other configuration. One might have the latest update while the other had an older copy cached. Both had selected the right character, but their simulations could disagree about what that character did.
 
-Both peers must simulate the same moves, frame data, collision values, and character configuration. If one client loads a recently updated character while the other uses an older cached edition, the simulations can diverge even though both players selected the same character key. From an authoring perspective, suppose one character was problematic and had to be reverted: the same problem in reverse. If everyone used only the newest version, supporting content reversions would require authoring redundant data and a confusing internal tracking system.
+Reverting a problematic character raised the same question. I needed a way to select an earlier edition without overwriting the meaning of the data used by matches that already existed. Loading whatever was newest wouldn’t give me that control.
 
-The difficult part of character selection was therefore not identifying that both players had selected `Crabbus`.
-
-It was guaranteeing that `Crabbus` represented the exact same bytes on both machines.
-
-The browser and the platform's PAM service already knew which characters the players had selected. The Unity client needed those selections to arrive alongside an explicit content edition.
-
-The WebBridge payload therefore carries a `contentVersion` with the ordered player selections. `GetCharacterKeys()` reduces those selections into the distinct Addressable keys required by the match.
-
-Each peer receives the same match payload.
-
-At match creation, PAM resolves the live content edition from `content_latest.json`, briefly caches that pointer, and pins the resulting version to the match. A new edition can become live without changing matches that already exist.
-
-The system became:
-
-```text
-publish Addressables bundles to Amazon S3 (AWS)
-        ↓
-write manifest_N.json and manifest_N.sig
-        ↓
-update content_latest.json
-        ↓
-PAM resolves and pins contentVersion at match creation
-        ↓
-WebBridge sends contentVersion and character selections
-        ↓
-each WebGL client verifies and warms the same edition
-```
-
-The latest version is useful at match creation.
-
-Once the match exists, “latest” is no longer a safe identity.
-
-## Engine versions and content versions are different contracts
-
-The architecture became easier to reason about once we stopped treating every update as the same kind of release.
-
-Some changes affect the networked simulation itself. Combat code, serialization, netcode behavior, and protocol changes legitimately require a new client build and a compatible server deployment.
-
-A roster or balance update should not necessarily carry that same cost.
-
-Adding a character should be a content publish, not automatically an engine release.
-
-That required two independent versions:
-
-| Version                  | What it describes                                         | Bumped when                       | Cost of change                      |
-| ------------------------ | --------------------------------------------------------- | --------------------------------- | ----------------------------------- |
-| Client or engine version | Combat code, netcode, serialization, and runtime behavior | Networked simulation changes      | Client build and server redeploy    |
-| Content version          | The available characters and their exact published bytes  | Roster or balance content changes | Bundle publish and manifest signing |
-
-Each character entry also contains its own content hash. That hash identifies the exact bundle bytes within a content edition and serves as both a cache identity and an integrity check.
-
-This split became the spine of the system.
-
-Without it, every roster update looked like an engine release. With it, the code and content could evolve on separate schedules while still declaring their compatibility.
-
-## The manifest and content editions
-
-An Addressable key identifies something the client can load.
-
-It does not describe the complete edition a match should trust.
-
-That became the manifest's responsibility.
-
-The manifest sits between content publishing, PAM, caching, and Unity. It lives on S3 rather than being compiled into PAM or the game client. Each versioned document describes one immutable content edition and contains entries keyed by character:
+The manifest gave us a record of each published content edition. It lived on S3 rather than being compiled into PAM or the game client, and described the character bundles belonging to that edition. A simplified example looked like this:
 
 ```json
 {
@@ -176,92 +95,63 @@ The manifest sits between content publishing, PAM, caching, and Unity. It lives 
 }
 ```
 
-The client build embeds an Ed25519 public key.
+I also needed the client to check that it had received the expected manifest before trusting the contents. Publishing produced a separate Ed25519 signature file, and the client build contained the public key needed to verify it. When joining a match, the client downloaded `manifest_<N>.json` and `manifest_<N>.sig` and checked the signature against the exact raw JSON bytes.
 
-When joining a match, it downloads `manifest_<N>.json` and `manifest_<N>.sig`, verifies the signature over the exact raw JSON bytes, validates the document against the supported schema, and then trusts the hashes and bundle locations declared inside it.
+The client also validated the document format and version compatibility. Those checks answered different questions: whether the manifest came from the expected publisher without being modified, whether the client understood its structure, and whether it could use the content. A correctly signed document could still require a newer client or use a format an older client didn’t understand.
 
-Those checks cover separate concerns.
+When PAM created a match, it checked `content_latest.json` to find the current content version and saved that version with the match. It briefly cached the lookup so it didn’t need to request the file from S3 for every new match. I wanted an update to become available without changing the character data underneath people who were already playing.
 
-The signature establishes that the manifest came from the expected publisher and was not modified in transit.
+PAM and the browser already had the players’ character selections, so I included the content version with those selections in the WebBridge payload sent to Unity. Both players received the same match information. The client then used `GetCharacterKeys()` to work out which characters it needed to load, using the manifest for the version assigned to that match.
 
-Schema validation establishes that the client understands the document it received.
+## Reusing downloaded content
 
-Version checks establish whether the client is compatible with that content edition.
+Once the match had an explicit edition, I could decide whether the content a player already had was still useful. Each bundle’s URL or cache key was based on its content hash. If the bytes hadn’t changed, the same cached object could be reused. If they had changed, the new hash identified a different object, so an old cached copy wouldn’t be mistaken for the update.
 
-A correctly signed manifest may still use a schema an older client cannot interpret. A structurally valid manifest may still require a newer engine version. Authenticity, shape, and compatibility are related, but they are not interchangeable.
+That meant the cache could work with exact bytes. It didn’t have to understand why a character had changed or which balance patch introduced the change. It needed to know whether the object identified by the requested hash was already available locally.
 
-The manifest gave the match an immutable content edition:
+There was another detail here that I had to keep separate from the loading code. An Addressables handle represents an asset loaded into Unity’s memory. Releasing that handle doesn’t necessarily remove the downloaded bundle from Unity’s cache, the browser cache, or a service worker’s cache. A service worker is a browser script that can handle requests and keep downloaded files available for later use.
 
-> Both clients use the same exact content edition.
+I wanted downloaded content to remain useful after the scene that loaded it had ended. That shaped the division between the SDK and the game layer: the SDK prepared the content required by the match, then the game resolved the actual character assets when it needed them.
 
-That could not be expressed safely through a mutable list of the newest characters.
+```csharp {walkthrough}
+// @step select : Read the character keys selected for this match | Ignore content the players do not need
+string[] keys = payload.GetCharacterKeys();
 
-## Roster presentation
+// @step warm : Download the required dependencies before connection | Do not resolve gameplay objects yet
+await AddressablePayloadLoader.LoadAssetsAsync(keys, cancellationToken);
 
-The signed content manifest defines:
+// @step play : Resolve the character through the game layer | Addressables can reuse the warmed bytes
+CharacterData character =
+    await addressableManager.LoadAddressable<CharacterData>(key);
+```
 
-> The exact character bytes this match may load.
+The browser-side cache service fetched the match’s manifest and signature from S3, resolved the selected characters’ bundle URLs, and passed the service worker both those URLs and the set of objects reachable from the manifest. The host page could start downloading the match’s content while Unity booted. Rematches could then reuse the downloaded bytes without relying on the previous scene’s Addressables handles staying alive.
 
-The lobby needs separate presentation data:
+Unity still performed its own check. After verifying the signed manifest, the client could compare the downloaded bundle bytes against the character’s declared `contentHash` before allowing the asset into the match. If the hash didn’t match, the connection path stopped rather than loading unexpected data.
 
-- What name should appear on the character tile?
-- Which image should be shown?
-- Where should the character appear in the roster?
-- Is the character currently selectable?
+That protected delivery integrity and cache correctness along the normal client path. It wasn’t a complete anti-cheat boundary: a WebGL or IL2CPP client could still be modified or hooked. Authoritative match verification belonged to the deterministic simulation and server-side tape validation.
 
-Originally, that presentation data lived in PAM's `games.json` and the client application's public assets. This meant that publishing a new character could still require a PAM redeploy even after its gameplay bundles were independently available.
+## Updating the lobby roster
 
-The later design moved lobby data into an unsigned, versioned `roster_<N>.json` document with a `roster_latest.json` pointer. Character art moved to content-addressed objects on S3.
+Getting character content out of the game build didn’t completely remove the need for a PAM deployment. The lobby still got its character names and selection images from `games.json` and the client application’s public assets. A new character’s gameplay bundle could be available independently while its selection tile still required a platform update.
 
-The signed manifest remained the integrity gate for match content.
+The lobby also needed information that didn’t belong to the exact gameplay data chosen for a match. It needed the display name, tile image, sort order, and whether the character was currently selectable. I wanted to be able to change those details without changing the data an existing match would load.
 
-The roster became the presentation contract.
+The later design moved that presentation data into an unsigned, versioned `roster_<N>.json` document with a `roster_latest.json` pointer. Character art moved to content-addressed objects on S3. The signed content manifest continued to define the exact bytes used by a match, while the roster document described what the lobby showed.
 
-That separation allowed the lobby to change without rewriting the meaning of an existing match. A tile image or sort order could change independently. A character could stop appearing as selectable while remaining resolvable for matches pinned to an earlier content version.
+Both documents described characters, but they had different jobs and trust requirements. Keeping them separate meant an image or sort order could change independently of gameplay content. It also let the lobby stop offering a character while that character remained available to matches using an earlier edition.
 
-Both documents describe characters, but each serves a different consumer and carries different trust requirements.
+### Removing a character
 
-Combining them would have made both harder to evolve.
+That last case needed some care. Once matches could use older editions, removing a character couldn’t mean erasing every record of it. An existing match might still reference it, a returning player might have its bundle cached, and a replay or validation process might need to resolve it later.
 
-## Removal became another versioning problem
+Manifest entries used explicit lifecycle states: `active`, `deprecated`, and `removed`. A character could leave the current roster while older editions still described it. The roster could also mark it as non-selectable without deleting the content identity needed by a previously created match.
 
-Once matches could be pinned to older editions, deleting a character could no longer mean erasing every record of it.
+This was another reason to keep each published edition intact. I could change what was available to new players while preserving the information needed to understand a match created before that change.
 
-A match created against an older edition might still reference that character. A returning client might already have its bundle cached. A replay or validation process might also need to resolve it later.
+## From a character update to a match
 
-Manifest entries therefore remain representable and use an explicit lifecycle status:
-
-- `active`
-- `deprecated`
-- `removed`
-
-A removed character may no longer be offered to new players, but older editions can still describe it.
-
-The roster follows the same principle. Presentation can mark a character as non-selectable without erasing the content identity required by a previously pinned match.
-
-“Removed from the current roster” and “never existed” are not the same state.
-
-Soft deletion preserves that distinction.
-
-## Cache correctness
-
-Content-addressing made cache invalidation mostly automatic.
-
-A bundle's URL or cache key is derived from its content hash. When the character bytes remain unchanged, their identity remains unchanged and the cached object is still valid. When the bytes change, the hash changes and the new bundle becomes a guaranteed cache miss.
-
-The cache does not need to reason about characters, balance patches, or match versions. It only needs to check whether the bytes identified by a hash already exist locally.
-
-The browser-side cache service fetches the match-pinned manifest and its signature from the S3 content prefix. It resolves the bundle URLs for the selected characters and sends the service worker both the selected URLs and the set of objects reachable from the manifest.
-
-That allows the host page to begin warming the current match's content while Unity boots. Rematches can reuse durable browser-cached bytes rather than depending on scene-local Addressables handles remaining alive.
-
-Unity still performs its own enforcement step.
-
-After verifying the signed manifest, the client can compare the downloaded bundle bytes against the `contentHash` declared for that character before allowing the asset into the match. A mismatch aborts the connection path instead of silently loading unexpected data.
-
-This is not an anti-cheat boundary because a WebGL or IL2CPP client can be modified or hooked. The check protects delivery integrity and cache correctness along the normal client path. Authoritative match verification still belongs to the deterministic simulation and server-side tape validation.
-
-The complete publish lifecycle became explicit:
+By this point, a character update had a publishing process separate from releasing the game:
 
 1. Build the Addressables bundles using content-hashed names.
 2. Compute the bundle hashes.
@@ -271,53 +161,39 @@ The complete publish lifecycle became explicit:
 6. Move the `content_latest.json` pointer.
 7. Let PAM pin that version when creating new matches.
 
-Each step produces or updates an artifact with a clearly bounded responsibility.
+The path from publishing to playing looked like this:
 
-## The reusable lesson
+```text
+publish Addressables bundles to Amazon S3 (AWS)
+        ↓
+write manifest_N.json and manifest_N.sig
+        ↓
+update content_latest.json
+        ↓
+PAM resolves and pins contentVersion at match creation
+        ↓
+WebBridge sends contentVersion and character selections
+        ↓
+each WebGL client verifies and warms the same edition
+```
 
-Looking back, the most useful part of the design was not any individual Unity feature.
+Each part of the pipeline now had enough information to do its job without having to own the entire character system:
 
-It was realizing that every layer needed a distinct responsibility.
+| Artifact | Responsibility |
+| --- | --- |
+| ScriptableObjects | Store authored character data and behavior |
+| Addressable keys | Identify and resolve loadable assets |
+| Content manifest | Describe the exact content edition and its compatibility requirements |
+| Roster document | Describe how available content appears in the lobby |
+| Cache | Reuse exact bytes already present locally |
+| Match payload | Carry the agreed edition and character selections |
 
-| Artifact          | Responsibility                                      |
-| ----------------- | --------------------------------------------------- |
-| ScriptableObjects | Store authored game data                            |
-| Addressable keys  | Identify and resolve loadable assets                |
-| Content manifest  | Define the exact edition a match may load           |
-| Roster document   | Describe how available content appears in the lobby |
-| Cache             | Reuse exact bytes already present locally           |
-| Match payload     | Carry the agreed edition and character selections   |
+## What I carried into other projects
 
-None of these systems replaced the others.
+This was my first practical encounter with manifest design as more than a generated list of files. I had started with a small character setup inside Unity, but publishing those characters separately meant I needed to describe them in a way the platform, browser, and game could all use.
 
-Each exists because the previous abstraction intentionally stops short of solving the next problem.
+The manifest became that shared record. It identified an edition, where its bytes could be found, and which clients could use it. ScriptableObjects remained useful for authoring, Addressables handled asset loading, and the lobby had its own presentation data. I could keep improving those parts without asking one of them to handle everything else.
 
-Trying to make one artifact own all of those responsibilities would have produced a larger and more tightly coupled system.
+Later, while building the publishing pipeline for this website, I recognized a similar problem. One system authored and published content, another rendered it, and the application needed metadata, dependency relationships, cache identities, and a way to refresh only the affected pages.
 
-The design improved as those responsibilities separated.
-
-This was my first practical encounter with manifest design as more than a generated list of files. The manifest became a contract between a system that published content and several systems that consumed it for different reasons.
-
-Later, while building the publishing pipeline for this website, I recognized the same shape.
-
-The technologies were different, but the problem was familiar. One system authored and published content. Another rendered it. The rest of the application needed metadata, dependency relationships, cache identities, and selective invalidation. A generated manifest became the boundary that allowed those systems to coordinate without requiring each one to rediscover the entire content set.
-
-That is the broader lesson I carried forward:
-
-When one system publishes content independently from the client that consumes it, the two need an explicit contract.
-
-A useful manifest records more than what exists. It establishes which edition is active, where its exact bytes can be found, which consumers can use it, and which assumptions remain stable after newer content is published.
-
-I thought I was building a character database.
-
-What I ended up building was the agreement that allowed several independent systems to talk about the same content without all becoming the same system.
-
----
-
-<!-- letter-outro -->
-There's more to build.
-
-_Ciao,_
-
-**KG**
-<!-- /letter-outro -->
+The technologies were different, but I could use the same idea: generate the information the consuming systems needed when publishing the content. That gave them a shared description to work from without requiring each one to rediscover how all the content fit together.
