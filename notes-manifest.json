@@ -2,6 +2,20 @@
   "version": 2,
   "notes": [
     {
+      "slug": "when-to-playtest",
+      "title": "Why and how to pre-playtest",
+      "date": "2026-10-28",
+      "tags": [
+        "playtesting",
+        "rant"
+      ],
+      "category": "experiments",
+      "featured": false,
+      "excerpt": "How to recognize when internal testing can answer a question before bringing a game to in-person playtesters.",
+      "excalidrawRefs": [],
+      "filePath": "cards/When to Playtest.md"
+    },
+    {
       "slug": "athens-core-omega",
       "title": "Athens Core Ω",
       "date": "2026-08-09",
